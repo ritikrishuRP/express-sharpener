@@ -1,51 +1,25 @@
+const path = require('path');
+
 const express = require('express');
 const bodyParser = require('body-parser');
-const fs = require('fs');
 
 const app = express();
 
-app.use(bodyParser.urlencoded());
+const adminRoutes = require('./routes/admin')
+const shopRoutes = require('./routes/shop.js')
+const contactRoutes = require('./routes/contactUs.js')
+const successRoutes = require('./routes/success.js')
 
-app.get("/", (req,res) => {
-    fs.readFile('username.txt', (err, data) => {
-        if(err){
-           console.log(err)
-           data = 'No Chat Exists'
-        }
-        res.send(
-            `${data}<form action="/" method="POST" onSubmit="document.getElementById('username').value = localStorage.getItem('username')" >
-            <input type = "text" name="message" id="message">
-            <input type = "hidden" name = "username" id = "username">
-            <br />
-            <button type = "submit">Send</button>
-            </form>`
-        );
-    })
-})
-  
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(express.static(path.join(__dirname, 'public')))
 
-app.post("/",(req,res) => {
-    console.log(req.body.username)
-    console.log(req.body.message)
-    fs.writeFile("username.txt", `${req.body.username}: ${req.body.message} `,{flag: 'a'}, (err) =>
-        err ? console.log(err) : res.redirect("/")
-    );
-});
+app.use('/admin', adminRoutes);
+app.use(shopRoutes);
+app.use(contactRoutes);
+app.use(successRoutes);
 
-app.get("/login", (req, res) => {
-    res.send(`
-        <form action="/login" method="POST" onSubmit="localStorage.setItem('username', document.getElementById('username').value)">
-            <input type="text" name="username" placeholder="username" id="username">
-            <br />
-            <button type="submit">Login</button>
-        </form>
-    `);
-});
-
-app.post("/login", (req, res) => {
-   
-    res.redirect('/');
+app.use((req,res,next) => {
+    res.status(404).sendFile(path.join(__dirname, 'views', '404.html'))
 });
 
 app.listen(4000);
-
